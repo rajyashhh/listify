@@ -4,6 +4,7 @@ const app = express();
 const jwt = require("jsonwebtoken");
 const {UserModel, TodoModel} = require("./db");
 const mongoose = require("mongoose");
+const port = 3001;
 mongoose.connect("mongodb+srv://yash:hKimiPvfGZjxkpU9@cluster0.yvabp.mongodb.net/listify")
 
 JWT_SECRET_KEY = "YashCrazy"
@@ -12,16 +13,25 @@ app.post('/signup', async (req, res)=>{
     const email = req.body.email;
     const password = req.body.password;
     const hashedPassword = await bcrypt.hash(password, 5);
-    console.log(hashedPassword);
     const name = req.body.name;
-    await UserModel.create({
-        email : email,
-        password : hashedPassword,
-        name : name
-    })
-    res.json({
-        message : "You are logged in"
-    })
+    let errorThrown = false;
+    try{
+        await UserModel.create({
+            email : email,
+            password : hashedPassword,
+            name : name
+        })
+        res.json({
+            message : "You have signed up successfully"
+        })
+    } catch (e){
+        errorThrown = true;
+    }
+    if (errorThrown){
+        res.json({
+            message : "You are already signed up!"
+        })
+    }
 });
 app.post('/login', async (req, res)=>{
     const email = req.body.email;
@@ -84,4 +94,4 @@ function auth (req, res, next){
         })
     }
 }
-app.listen(3001, console.log("App is running on the port 3000"));
+app.listen(port, console.log(`App is running on the port no. ${port}`));
