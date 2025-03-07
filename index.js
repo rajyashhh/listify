@@ -12,7 +12,7 @@ app.post('/signup', async (req, res)=>{
     const password = req.body.password;
     const name = req.body.name;
     await UserModel.create({
-        email : email,
+        email : {type: String, unique : true},
         password : password,
         name : name
     })
@@ -48,8 +48,16 @@ app.post('/todo', auth, (req, res)=>{
         userId : userId
     })
 });
-app.get('/todos', auth, (req, res)=>{
+app.get('/todos', auth, async (req, res)=>{
     const userId = req.userId;
+    const title = req.headers.title;
+    const done = req.headers.done;
+
+    await TodoModel.create({
+        title : title,
+        done : done,
+        userId : userId
+    })
     res.json({
         userId : userId
     })
