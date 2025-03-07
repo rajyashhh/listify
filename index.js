@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcrypt");
 const app = express();
 const jwt = require("jsonwebtoken");
 const {UserModel, TodoModel} = require("./db");
@@ -10,10 +11,12 @@ app.use(express.json());
 app.post('/signup', async (req, res)=>{
     const email = req.body.email;
     const password = req.body.password;
+    const hashedPassword = await bcrypt.hash(password, 5);
+    console.log(hashedPassword);
     const name = req.body.name;
     await UserModel.create({
-        email : {type: String, unique : true},
-        password : password,
+        email : email,
+        password : hashedPassword,
         name : name
     })
     res.json({
@@ -23,12 +26,19 @@ app.post('/signup', async (req, res)=>{
 app.post('/login', async (req, res)=>{
     const email = req.body.email;
     const password = req.body.password;
+    
     const user  = await UserModel.findOne({
-        email : email,
-        password : password
+        email : email
     })
+    if(!user){
+        res.json({
+            message : "No user exists with this mail id."
+        })
+    }
     console.log(user);
-    if (user){
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (passwordMatch){
         const token = jwt.sign({
             id: user._id.toString()
         },JWT_SECRET_KEY)
@@ -38,7 +48,7 @@ app.post('/login', async (req, res)=>{
         })
     } else{
         res.status(403).json({
-            message : "Incoreect Credentials"
+            message : "Incorrect Password"
         })
     }
 });
