@@ -5,11 +5,31 @@ const jwt = require("jsonwebtoken");
 const {UserModel, TodoModel} = require("./db");
 const mongoose = require("mongoose");
 const port = 3001;
+const { z } = require("zod");
+
 mongoose.connect("mongodb+srv://yash:hKimiPvfGZjxkpU9@cluster0.yvabp.mongodb.net/listify")
 
 JWT_SECRET_KEY = "YashCrazy"
 app.use(express.json());
 app.post('/signup', async (req, res)=>{
+
+    const requiredBody = z.object({
+        email: z.string().min(3).max(100).email(),
+        name : z.string().min(3).max(100),
+        password : z.string().min(5)
+    })
+
+
+    //  const parsedData = requiredBody.parse(req.body);
+    const parsedDatawithSuccess = requiredBody.safeParse(req.body);
+
+    if(!parsedDatawithSuccess.success){
+        res.json({
+            message : "Incorrect format",
+            error : parsedDatawithSuccess.error
+        })
+        return;
+    }
     const email = req.body.email;
     const password = req.body.password;
     const hashedPassword = await bcrypt.hash(password, 5);
