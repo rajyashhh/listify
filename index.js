@@ -1,15 +1,20 @@
+require("dotenv").config();
 const express = require("express");
 const bcrypt = require("bcrypt");
 const app = express();
 const jwt = require("jsonwebtoken");
 const {UserModel, TodoModel} = require("./db");
+
 const mongoose = require("mongoose");
-const port = 3001;
+const port = process.env.port;
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+const mongo_url = process.env.MONGO_URI;
+
 const { z } = require("zod");
+console.log("JWT_SECRET_KEY:", process.env.JWT_SECRET_KEY);
+mongoose.connect(mongo_url);
 
-mongoose.connect("mongodb+srv://yash:hKimiPvfGZjxkpU9@cluster0.yvabp.mongodb.net/listify")
 
-JWT_SECRET_KEY = "YashCrazy"
 app.use(express.json());
 app.post('/signup', async (req, res)=>{
 
@@ -32,7 +37,7 @@ app.post('/signup', async (req, res)=>{
     }
     const email = req.body.email;
     const password = req.body.password;
-    const hashedPassword = await bcrypt.hash(password, 5);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const name = req.body.name;
     let errorThrown = false;
     try{
