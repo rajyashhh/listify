@@ -4,11 +4,14 @@ const bcrypt = require("bcrypt");
 const app = express();
 const jwt = require("jsonwebtoken");
 const {UserModel, TodoModel} = require("./db");
-
+const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const port = process.env.port;
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const mongo_url = process.env.MONGO_URI;
+const sender_email = process.env.sender_email;
+const sender_pass = process.env.sender_pass;
+
 
 const { z } = require("zod");
 console.log("JWT_SECRET_KEY:", process.env.JWT_SECRET_KEY);
@@ -17,7 +20,6 @@ mongoose.connect(mongo_url);
 
 app.use(express.json());
 app.post('/signup', async (req, res)=>{
-
     const requiredBody = z.object({
         email: z.string().min(3).max(100).email(),
         name : z.string().min(3).max(100),
@@ -39,7 +41,40 @@ app.post('/signup', async (req, res)=>{
     const password = req.body.password;
     const hashedPassword = await bcrypt.hash(password, 10);
     const name = req.body.name;
+
+    // Sending mail
+    const transporter = nodemailer.createTransport({
+        service : "gmail",
+        // host: for some services such as zoho, yahhoo
+        // port: for some services such as zoho, yahhoo 465, // ✅ Use port 465 for Yahoo with `secure: true`
+        //secure: true, for some services such as zoho, yahhoo
+        //secure: false, // true for port 465, false for other ports for some services such as zoho, yahhoo
+        auth: {
+            user: sender_email,
+            pass: sender_pass,
+
+        },
+      });
+      let otp = Math.floor(Math.random()*1000000);
+      // async..await is not allowed in global scope, must use a wrapper
+      async function main() {
+        // send mail with defined transport object
+        const info = await transporter.sendMail({
+          from: `"Listify!" <${sender_email}>` , // sender address
+          to: email, // list of receivers
+          subject: "OTP from Listify!", // Subject line
+          
+          text: `${otp} is your otp. Thanks for signing up on Listify!`, // plain text body
+          
+        });
+      
+        console.log("Message sent: " + email + info.messageId);
+    }
+    main();
+
+
     let errorThrown = false;
+
     try{
         await UserModel.create({
             email : email,
@@ -58,6 +93,10 @@ app.post('/signup', async (req, res)=>{
         })
     }
 });
+
+    
+
+
 app.post('/login', async (req, res)=>{
     const email = req.body.email;
     const password = req.body.password;
