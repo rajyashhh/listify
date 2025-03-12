@@ -14,7 +14,7 @@ const sender_pass = process.env.sender_pass;
 
 
 const { z } = require("zod");
-console.log("JWT_SECRET_KEY:", process.env.JWT_SECRET_KEY);
+
 mongoose.connect(mongo_url);
 
 
@@ -68,7 +68,8 @@ app.post('/signup', async (req, res)=>{
           
         });
       
-        console.log("Message sent: " + email + info.messageId);
+        console.log("Message sent: " + email );
+        // + info.messageId
     }
     main();
 
